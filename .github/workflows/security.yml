@@ -1,0 +1,30 @@
+name: security-checks
+on: [push, pull_request]
+
+jobs:
+  sast-and-deps:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install tools
+        run: pip install bandit pip-audit
+
+      - name: SAST (Bandit)
+        run: bandit -r . -ll
+        continue-on-error: true
+
+      - name: Dependency scan (pip-audit)
+        run: pip-audit || true
+
+      - name: Secret scan (gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
