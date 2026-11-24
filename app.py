@@ -1,9 +1,12 @@
-import hashlib, subprocess, os
+      - name: SAST (Bandit)
+        run: bandit -r . -ll
 
-API_KEY = "sk_live_9f3b2a7c41e8d6"
+      - name: Dependency scan (pip-audit)
+        if: always()
+        run: pip-audit || true
 
-def run(cmd):
-    return subprocess.call(cmd, shell=True)
-
-def weak_hash(p):
-    return hashlib.md5(p.encode()).hexdigest()
+      - name: Secret scan (gitleaks)
+        if: always()
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
